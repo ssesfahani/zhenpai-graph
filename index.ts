@@ -41,8 +41,8 @@ interface ChartData {
 }
 
 async function generateChart(chartData: ChartData): Promise<Buffer> {
-  // Create a canvas
-  const canvas = createCanvas(800, 600);
+  // Create a canvas with higher resolution for better visual quality
+  const canvas = createCanvas(1200, 800);
   // const ctx = canvas.getContext('2d');
 
   // Initialize ECharts with the canvas
@@ -53,35 +53,50 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
 
   // Convert our schema to ECharts format
   const option = {
-    backgroundColor: "#36393f",
+    backgroundColor: {
+      type: 'radial' as const,
+      x: 0.5,
+      y: 0.5,
+      r: 0.8,
+      colorStops: [
+        { offset: 0, color: '#1a1d29' },
+        { offset: 0.4, color: '#2a2d3a' },
+        { offset: 1, color: '#36393f' }
+      ]
+    },
     animation: false,
     title: {
       text: chartData.title || "",
       left: "center",
-      top: 20,
+      top: 25,
       textStyle: {
-        color: "#dcddde",
-        fontSize: 18,
+        color: "#ffffff",
+        fontSize: 22,
         fontWeight: "bold",
       },
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#2f3136",
-      borderColor: "#72767d",
+      backgroundColor: "rgba(47, 49, 54, 0.95)",
+      borderColor: "#00d4ff",
+      borderWidth: 2,
       textStyle: {
-        color: "#dcddde",
+        color: "#ffffff",
+        fontSize: 14,
       },
     },
     legend: {
       show: false,
     },
     grid: {
-      left: 30,
-      right: 20,
-      top: 20,
-      bottom: 30,
+      left: 60,
+      right: 40,
+      top: 80,
+      bottom: 70,
       containLabel: true,
+      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+      borderColor: 'rgba(0, 212, 255, 0.2)',
+      borderWidth: 1,
     },
     xAxis: {
       type: "category",
@@ -90,25 +105,32 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
         chartData.series[0]?.data.map((_, i) => `Item ${i + 1}`),
       name: chartData.xAxis?.title || "",
       nameLocation: "middle",
-      nameGap: 30,
+      nameGap: 40,
       nameTextStyle: {
-        color: "#dcddde",
+        color: "#ffffff",
+        fontSize: 16,
+        fontWeight: "600",
       },
       axisLine: {
         show: true,
         lineStyle: {
-          color: "#72767d",
+          color: "#00d4ff",
+          width: 2,
         },
       },
       axisTick: {
         show: true,
         lineStyle: {
-          color: "#72767d",
+          color: "#00d4ff",
+          width: 2,
         },
       },
       axisLabel: {
         show: true,
-        color: "#b9bbbe",
+        color: "#e3e5e8",
+        fontSize: 11,
+        fontWeight: "500",
+        rotate: 30,
       },
     },
     yAxis: {
@@ -117,29 +139,36 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
       nameLocation: "middle",
       nameGap: 50,
       nameTextStyle: {
-        color: "#dcddde",
+        color: "#ffffff",
+        fontSize: 16,
+        fontWeight: "600",
       },
       axisLine: {
         show: true,
         lineStyle: {
-          color: "#72767d",
+          color: "#00d4ff",
+          width: 2,
         },
       },
       axisTick: {
         show: true,
         lineStyle: {
-          color: "#72767d",
+          color: "#00d4ff",
+          width: 2,
         },
       },
       axisLabel: {
         show: true,
-        color: "#b9bbbe",
+        color: "#e3e5e8",
+        fontSize: 12,
+        fontWeight: "500",
       },
       splitLine: {
         show: true,
         lineStyle: {
-          color: "#40444b",
+          color: "rgba(0, 212, 255, 0.15)",
           type: "dashed",
+          width: 1,
         },
       },
     },
@@ -148,14 +177,57 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
       type: chartData.type,
       data: series.data,
       smooth: chartData.type === "line",
-      lineStyle: chartData.type === "line" ? { width: 2 } : undefined,
+      smoothMonotone: 'x',
+      symbol: 'circle',
+      symbolSize: 10,
+      showSymbol: true,
+      lineStyle: chartData.type === "line" ? { 
+        width: 4,
+        color: {
+          type: 'linear' as const,
+          x: 0, y: 0, x2: 1, y2: 0,
+          colorStops: [
+            { offset: 0, color: '#00d4ff' },
+            { offset: 0.25, color: '#4facfe' },
+            { offset: 0.5, color: '#00f2fe' },
+            { offset: 0.75, color: '#43e97b' },
+            { offset: 1, color: '#38f9d7' }
+          ]
+        },
+      } : undefined,
       itemStyle: {
-        borderWidth: 1,
-        borderColor: "#fff",
+        color: {
+          type: 'radial' as const,
+          x: 0.5, y: 0.5, r: 0.8,
+          colorStops: [
+            { offset: 0, color: '#ffffff' },
+            { offset: 0.7, color: '#00d4ff' },
+            { offset: 1, color: '#4facfe' }
+          ]
+        },
+        borderWidth: 3,
+        borderColor: "#ffffff",
       },
       emphasis: {
         focus: "series",
+        itemStyle: {
+          borderWidth: 4,
+          shadowBlur: 20,
+        }
       },
+      areaStyle: chartData.type === "line" ? {
+        opacity: 0.3,
+        color: {
+          type: 'linear' as const,
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(0, 212, 255, 0.6)' },
+            { offset: 0.3, color: 'rgba(79, 172, 254, 0.4)' },
+            { offset: 0.7, color: 'rgba(67, 233, 123, 0.2)' },
+            { offset: 1, color: 'rgba(56, 249, 215, 0.1)' }
+          ]
+        }
+      } : undefined,
     })),
   };
 
