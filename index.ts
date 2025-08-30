@@ -54,15 +54,15 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
   // Convert our schema to ECharts format
   const option = {
     backgroundColor: {
-      type: 'radial' as const,
+      type: "radial" as const,
       x: 0.5,
       y: 0.5,
       r: 0.8,
       colorStops: [
-        { offset: 0, color: '#1a1d29' },
-        { offset: 0.4, color: '#2a2d3a' },
-        { offset: 1, color: '#36393f' }
-      ]
+        { offset: 0, color: "#1a1d29" },
+        { offset: 0.4, color: "#2a2d3a" },
+        { offset: 1, color: "#36393f" },
+      ],
     },
     animation: false,
     title: {
@@ -94,8 +94,8 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
       top: 80,
       bottom: 70,
       containLabel: true,
-      backgroundColor: 'rgba(255, 255, 255, 0.03)',
-      borderColor: 'rgba(0, 212, 255, 0.2)',
+      backgroundColor: "rgba(255, 255, 255, 0.03)",
+      borderColor: "rgba(0, 212, 255, 0.2)",
       borderWidth: 1,
     },
     xAxis: {
@@ -177,33 +177,41 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
       type: chartData.type,
       data: series.data,
       smooth: chartData.type === "line",
-      smoothMonotone: 'x',
-      symbol: 'circle',
+      smoothMonotone: "x",
+      symbol: "circle",
       symbolSize: 10,
       showSymbol: true,
-      lineStyle: chartData.type === "line" ? { 
-        width: 4,
-        color: {
-          type: 'linear' as const,
-          x: 0, y: 0, x2: 1, y2: 0,
-          colorStops: [
-            { offset: 0, color: '#00d4ff' },
-            { offset: 0.25, color: '#4facfe' },
-            { offset: 0.5, color: '#00f2fe' },
-            { offset: 0.75, color: '#43e97b' },
-            { offset: 1, color: '#38f9d7' }
-          ]
-        },
-      } : undefined,
+      lineStyle:
+        chartData.type === "line"
+          ? {
+              width: 4,
+              color: {
+                type: "linear" as const,
+                x: 0,
+                y: 0,
+                x2: 1,
+                y2: 0,
+                colorStops: [
+                  { offset: 0, color: "#00d4ff" },
+                  { offset: 0.25, color: "#4facfe" },
+                  { offset: 0.5, color: "#00f2fe" },
+                  { offset: 0.75, color: "#43e97b" },
+                  { offset: 1, color: "#38f9d7" },
+                ],
+              },
+            }
+          : undefined,
       itemStyle: {
         color: {
-          type: 'radial' as const,
-          x: 0.5, y: 0.5, r: 0.8,
+          type: "radial" as const,
+          x: 0.5,
+          y: 0.5,
+          r: 0.8,
           colorStops: [
-            { offset: 0, color: '#ffffff' },
-            { offset: 0.7, color: '#00d4ff' },
-            { offset: 1, color: '#4facfe' }
-          ]
+            { offset: 0, color: "#ffffff" },
+            { offset: 0.7, color: "#00d4ff" },
+            { offset: 1, color: "#4facfe" },
+          ],
         },
         borderWidth: 3,
         borderColor: "#ffffff",
@@ -213,21 +221,63 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
         itemStyle: {
           borderWidth: 4,
           shadowBlur: 20,
-        }
+        },
       },
-      areaStyle: chartData.type === "line" ? {
-        opacity: 0.3,
-        color: {
-          type: 'linear' as const,
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: 'rgba(0, 212, 255, 0.6)' },
-            { offset: 0.3, color: 'rgba(79, 172, 254, 0.4)' },
-            { offset: 0.7, color: 'rgba(67, 233, 123, 0.2)' },
-            { offset: 1, color: 'rgba(56, 249, 215, 0.1)' }
-          ]
-        }
-      } : undefined,
+      markPoint: {
+        data: [
+          {
+            coord: [
+              series.data.length - 1,
+              series.data[series.data.length - 1],
+            ],
+            name: "Current",
+            itemStyle: {
+              color: "#00ff88",
+              borderColor: "#ffffff",
+              borderWidth: 3,
+              shadowColor: "rgba(0, 255, 136, 0.8)",
+              shadowBlur: 20,
+            },
+          },
+        ],
+        symbol: "circle",
+        symbolSize: 16,
+        label: {
+          show: true,
+          position: "top",
+          color: "#ffffff",
+          fontWeight: "bold",
+          fontSize: 14,
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          borderColor: "#00ff88",
+          borderWidth: 1,
+          borderRadius: 6,
+          padding: [4, 8],
+          formatter: (params: any) => {
+            const value = params.data.coord[1];
+            return `${value} pts`;
+          },
+        },
+      },
+      areaStyle:
+        chartData.type === "line"
+          ? {
+              opacity: 0.3,
+              color: {
+                type: "linear" as const,
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                  { offset: 0, color: "rgba(0, 212, 255, 0.6)" },
+                  { offset: 0.3, color: "rgba(79, 172, 254, 0.4)" },
+                  { offset: 0.7, color: "rgba(67, 233, 123, 0.2)" },
+                  { offset: 1, color: "rgba(56, 249, 215, 0.1)" },
+                ],
+              },
+            }
+          : undefined,
     })),
   };
 
