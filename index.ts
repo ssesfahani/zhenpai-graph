@@ -56,7 +56,7 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
     backgroundColor: "#36393f",
     animation: false,
     title: {
-      text: chartData.title || "Chart",
+      text: chartData.title || "",
       left: "center",
       top: 20,
       textStyle: {
@@ -74,17 +74,13 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
       },
     },
     legend: {
-      bottom: 20,
-      data: chartData.series.map((s) => s.name),
-      textStyle: {
-        color: "#dcddde",
-      },
+      show: false,
     },
     grid: {
-      left: 80,
-      right: 40,
-      top: 80,
-      bottom: 80,
+      left: 30,
+      right: 20,
+      top: 20,
+      bottom: 30,
       containLabel: true,
     },
     xAxis: {
@@ -179,7 +175,7 @@ async function generateChart(chartData: ChartData): Promise<Buffer> {
 }
 
 Bun.serve({
-  port: 3000,
+  port: 3001,
   routes: {
     "/user-points": {
       GET: async (req: Request) => {
@@ -214,25 +210,64 @@ Bun.serve({
 
           const userData = await apiResponse.json();
 
-          // Extract running balance data and dates from points history
+          // Generate fixed 14-day date range for consistent X axis
+          const endDate = new Date();
+          const startDate = new Date();
+          startDate.setDate(endDate.getDate() - 13); // 14 days total
+
+          const categories = [];
+          const currentDate = new Date(startDate);
+          while (currentDate <= endDate) {
+            categories.push(currentDate.toLocaleDateString());
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          // Map user's points history to the fixed date range
           // @ts-ignore
           const pointsHistory = userData.points_history || [];
-          const categories = pointsHistory
-            .map((entry: any) =>
-              new Date(entry.created_at).toLocaleDateString()
-            )
-            .reverse(); // Reverse to show chronological order
+          const pointsMap = new Map();
 
-          const runningBalanceData = pointsHistory
-            .map((entry: any) => entry.running_balance)
-            .reverse(); // Reverse to show chronological order
+          // Build map of date -> running_balance
+          pointsHistory.forEach((entry: any) => {
+            const entryDate = new Date(entry.created_at).toLocaleDateString();
+            pointsMap.set(entryDate, entry.running_balance);
+          });
+
+          // Fill data array with user's balance for each date, carrying forward last known balance
+          const runningBalanceData = [];
+
+          // Find the starting balance (last known balance before the 7-day period)
+          let lastBalance = 0;
+
+          // Sort points history by date to find the most recent balance before our date range
+          const sortedHistory = pointsHistory.sort(
+            (a: any, b: any) =>
+              new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime()
+          );
+
+          for (const entry of sortedHistory) {
+            const entryDate = new Date(entry.created_at);
+            if (entryDate < startDate) {
+              lastBalance = entry.running_balance;
+            } else {
+              break;
+            }
+          }
+
+          for (const date of categories) {
+            if (pointsMap.has(date)) {
+              lastBalance = pointsMap.get(date);
+            }
+            runningBalanceData.push(lastBalance);
+          }
 
           const chartData: ChartData = {
             type: "line",
-            title: `Points Balance for ${
-              // @ts-ignore
-              userData.user_info?.discord_username || "User"
-            }`,
+            // title: `Points Balance for ${
+            //   // @ts-ignore
+            //   userData.user_info?.discord_username || "User"
+            // }`,
             xAxis: {
               categories,
               title: "Date",
