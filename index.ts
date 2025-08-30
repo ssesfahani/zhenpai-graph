@@ -227,10 +227,10 @@ Bun.serve({
           const pointsHistory = userData.points_history || [];
           const pointsMap = new Map();
 
-          // Build map of date -> running_balance
+          // Build map of timestamp -> running_balance (preserves multiple entries per day)
           pointsHistory.forEach((entry: any) => {
-            const entryDate = new Date(entry.created_at).toLocaleDateString();
-            pointsMap.set(entryDate, entry.running_balance);
+            const entryTimestamp = new Date(entry.created_at).getTime();
+            pointsMap.set(entryTimestamp, entry.running_balance);
           });
 
           // Fill data array with user's balance for each date, carrying forward last known balance
@@ -256,8 +256,27 @@ Bun.serve({
           }
 
           for (const date of categories) {
-            if (pointsMap.has(date)) {
-              lastBalance = pointsMap.get(date);
+            // Find the most recent balance for this date from all entries
+            const dayStart = new Date(date).getTime();
+            const dayEnd = dayStart + 24 * 60 * 60 * 1000 - 1; // End of day
+
+            // Get all entries for this day and find the latest one
+            let latestBalanceForDay = null;
+            let latestTimestamp = 0;
+
+            for (const [timestamp, balance] of pointsMap) {
+              if (
+                timestamp >= dayStart &&
+                timestamp <= dayEnd &&
+                timestamp > latestTimestamp
+              ) {
+                latestTimestamp = timestamp;
+                latestBalanceForDay = balance;
+              }
+            }
+
+            if (latestBalanceForDay !== null) {
+              lastBalance = latestBalanceForDay;
             }
             runningBalanceData.push(lastBalance);
           }
@@ -313,4 +332,4 @@ Bun.serve({
   },
 });
 
-console.log("Chart server running on PORT 3000");
+console.log("Chart server running on PORT 3001");
